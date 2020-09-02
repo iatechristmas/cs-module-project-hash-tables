@@ -22,7 +22,7 @@ class HashTable:
 
     def __init__(self, capacity):
         self.capacity = capacity
-        self.table = [[] for i in range(capacity)]
+        self.table = [None] * capacity
 
 
     def get_num_slots(self):
@@ -46,9 +46,14 @@ class HashTable:
         Implement this.
         """
         # Your code here
-        load_factor = self.total / self.capacity
 
-        return load_factor
+        total = 0
+
+        for key in self.table:
+            if key is not None:
+                total += 1
+
+        return total / self.capacity
 
 
     # def fnv1(self, key):
@@ -91,8 +96,24 @@ class HashTable:
         Implement this.
         """
         # Your code here
+
+        #index for table
         idx = self.hash_index(key)
-        self.table[idx] = value
+        # self.table[idx] = value
+        return self.insert_at_head(key, value, idx)
+
+
+    def insert_at_head(self, key, value, idx):
+        # create new node
+        node = HashTableEntry(key, value)
+
+        # if entry at index is empty, assign node as head
+        if self.table[idx] is None:
+            self.table[idx] = node
+        # if not empty, swap current head and new node
+        else:
+            node.next = self.table[idx]
+            self.table[idx] = node
 
 
     def delete(self, key):
@@ -107,8 +128,25 @@ class HashTable:
 
 
         idx = self.hash_index(key)
-        self.table[idx] = None
+        
+        current = self.table[idx]
 
+        if current.key == key:
+            self.table[idx] = self.table[idx].next
+            return self.table[idx]
+
+        prev = current
+        current = current.next
+
+        while current is not None:
+            # if current key is key, change prev.next to current.next. Current node will be deleted
+            if current.key == key:
+                prev.next = current.next
+                return current.value
+
+            else:
+                prev = prev.next
+                current = current.next
 
     def get(self, key):
         """
@@ -120,7 +158,21 @@ class HashTable:
         """
         # Your code here
         idx = self.hash_index(key)
-        return self.table[idx]
+
+        return self.find(key, idx)
+
+    def find(self, key, idx):
+
+        current = self.table[idx]
+        # loop to check chain links in idx
+        while current is not None:
+            if current.key == key:
+                return current.value
+            
+            current = current.next
+
+        return None
+        
 
 
     def resize(self, new_capacity):
@@ -131,6 +183,26 @@ class HashTable:
         Implement this.
         """
         # Your code here
+
+        # set new capacity
+        self.capacity = new_capacity
+
+        # copy of old table
+        old_table = self.table
+
+        # changing capacity of table
+        self.table = [None] * self.capacity
+
+        for i in old_table:
+            self.put(i.key, i.value)
+
+            current = i.next
+            # loop to go through chain links at current idx if applicable
+            while current is not None:
+                self.put(current.key, current.value)
+
+                current = current.next
+
 
 
 
